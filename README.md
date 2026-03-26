@@ -1,3 +1,4 @@
+
 # Pantheon Local Development Setup (Lando)
 
 A quick guide to setting up a local development environment from a Pantheon site using **Git**, **Terminus**, and **Lando**.
@@ -49,19 +50,7 @@ terminus site:list
 
 ----------
 
-## 📦 2. Clone the Pantheon Repository
-
-From the Pantheon dashboard, copy the **Dev Git URL**, then run:
-
-```bash
-git clone YOUR_PANTHEON_GIT_URL chancellorscircle
-cd chancellorscircle
-
-```
-
-----------
-
-## 🔑 3. Configure Pantheon Machine Token in Lando
+## ⚙️ 2. Configure Pantheon Machine Token in Lando
 
 Set your Pantheon machine token globally in Lando:
 
@@ -74,9 +63,9 @@ lando config set pantheon.machine.token YOUR_MACHINE_TOKEN --global
 
 ----------
 
-## ⚙️ 4. Initialize Lando with Pantheon
+## 🚀 3. Initialize Lando with Pantheon
 
-Inside your project directory:
+From the directory where you want the local project to live, run:
 
 ```bash
 lando init --source pantheon
@@ -87,16 +76,18 @@ Follow the prompts:
 
 -   Select your Pantheon account
     
--   Select your site (e.g. `chancellorscircle`)
+-   Select your site
     
--   Confirm the framework (WordPress/Drupal)
+-   Confirm the framework if prompted
+    
+-   Choose the local app name and destination directory if prompted
     
 
-This will generate a proper `.lando.yml` file.
+This will generate the project locally with a proper `.lando.yml` file.
 
 ----------
 
-## 🚀 5. Start the Local Environment
+## ▶️ 4. Start the Local Environment
 
 ```bash
 lando start
@@ -105,7 +96,7 @@ lando start
 
 ----------
 
-## 🔄 6. Pull Database and Files
+## 🔄 5. Pull Database and Files
 
 Pull from the Dev environment:
 
@@ -114,10 +105,25 @@ lando pull --database=dev --files=dev
 
 ```
 
-Or pull from Live (recommended for real content):
+Or pull from Live if needed:
 
 ```bash
 lando pull --database=live --files=live
+
+```
+
+----------
+
+## 🌿 6. Create a Git Branch (Important)
+
+By default, the Pantheon repository uses the `master` branch.
+
+> ⚠️ IMPORTANT: Do NOT make changes directly on `master`.
+
+Create a new branch before starting any development work:
+
+```bash
+git checkout -b your-feature-branch-name
 
 ```
 
@@ -141,6 +147,24 @@ https://my-site.lndo.site
 
 ## 🔐 8. WordPress Login Helpers
 
+```bash
+lando open
+
+```
+
+Or manually visit:
+
+```
+https://my-site.lndo.site
+
+```
+
+----------
+
+## 🔐 8. WordPress Login Helpers
+
+After pulling the database, you may not have access to an existing admin account locally.
+
 ### List users
 
 ```bash
@@ -148,17 +172,37 @@ lando wp user list
 
 ```
 
-### Reset password
+### Create a new admin user (recommended)
+
+```bash
+lando wp user create localadmin local@example.com --role=administrator --user_pass=password
+
+```
+
+### Reset password (optional)
 
 ```bash
 lando wp user update YOUR_USERNAME --user_pass=newpassword
 
 ```
 
-### Create a new admin user
+### Disable 2FA (Wordfence)
+
+Some Pantheon sites enforce Two-Factor Authentication via Wordfence, which can block local login.
+
+Disable it locally:
 
 ```bash
-lando wp user create admin admin@example.com --role=administrator --user_pass=password
+lando wp plugin deactivate wordfence
+
+```
+
+> ⚠️ Do NOT commit or push this change. This is for local development only.
+
+### Open admin
+
+```
+https://my-site.lndo.site/wp-admin
 
 ```
 
@@ -204,8 +248,17 @@ lando wp option update siteurl "https://my-site.lndo.site"
 terminus auth:login
 terminus site:list
 
-git clone YOUR_PANTHEON_GIT_URL chancellorscircle
-cd chancellorscircle
+lando config set pantheon.machine.token YOUR_MACHINE_TOKEN --global
+lando init --source pantheon
+lando start
+lando pull --database=dev --files=dev
+
+git checkout -b your-feature-branch-name
+
+lando open
+```bash
+terminus auth:login
+terminus site:list
 
 lando config set pantheon.machine.token YOUR_MACHINE_TOKEN --global
 lando init --source pantheon
@@ -219,13 +272,15 @@ lando open
 
 ## 🧠 Notes
 
--   `lando pull` requires the Pantheon recipe (auto-configured via `lando init`)
+-   `lando pull` requires the Pantheon recipe, which is auto-configured by `lando init --source pantheon`
     
 -   Database credentials are managed by Lando
     
--   MariaDB version warnings can be ignored unless upgrading
+-   MariaDB version warnings can usually be ignored unless you are upgrading
     
--   Always pull DB/files after cloning to get a working site
+-   You do not need to clone the repository separately when initializing directly from Pantheon with Lando
+    
+-   Always pull the database and files after initialization to get a working site
     
 
 ----------
